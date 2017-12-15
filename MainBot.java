@@ -107,41 +107,36 @@ public class MainBot extends ListenerAdapter
 		//RP Log
 		if(command[0].equalsIgnoreCase("!rpStart"))
 		{
-			if(event.getAuthor().getName().equals("RinTheSnowMew"))
-			{
-				logging = true; 
-				log.switchChan(event.getChannel().getName());
-				event.getChannel().sendMessage("Logging Started").queue();
-			}
+			logging = true; 
+			log.switchChan(event.getChannel().getName());
+			event.getChannel().sendMessage("Logging Started").queue();
+			
 		}
 		
 		if(command[0].equalsIgnoreCase("!rpend") && logging)
 		{
-			if(event.getAuthor().getName().equals("RinTheSnowMew"))
+			logging = false;
+			try 
 			{
-				logging = false;
-				try 
+				if(event.getMessage().getContent().length() <= 7)
 				{
-					if(event.getMessage().getContent().length() <= 7)
-					{
-						event.getChannel().sendFile(log.writeFile("RPLOG", event.getChannel().getName()),"RpLog", null).queue();
-					}
-					else
-					{
-						event.getChannel().sendFile(log.writeFile(event.getMessage().getContent().substring(7), event.getChannel().getName()), 
-								event.getMessage().getContent().substring(7), null).queue();
-					}
-					
-					event.getChannel().sendMessage("Test successful").queue();
-				} catch (FileNotFoundException e) 
-				{
-					e.printStackTrace();
-				} catch (UnsupportedEncodingException e) 
-				{
-					e.printStackTrace();
+					event.getChannel().sendFile(log.writeFile("RPLOG", event.getChannel().getName()),"RpLog.txt", null).queue();
 				}
-//				event.getChannel().sendFile("test.txt", "");
+				else
+				{
+					event.getChannel().sendFile(log.writeFile(event.getMessage().getContent().substring(7), event.getChannel().getName()), 
+							event.getMessage().getContent().substring(7) + ".txt", null).queue();
+				}
+				
+				event.getChannel().sendMessage("Test successful").queue();
+			} catch (FileNotFoundException e) 
+			{
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) 
+			{
+				e.printStackTrace();
 			}
+
 		}
 		
 		
