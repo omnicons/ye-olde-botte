@@ -28,7 +28,8 @@ public class RPLogger
 		}
 	}
 	
-	public File writeFile(String name, String channel) throws FileNotFoundException, UnsupportedEncodingException
+	public File writeFile(String name, String channel) 
+			throws FileNotFoundException, UnsupportedEncodingException
 	{
 		PrintWriter writer = new PrintWriter(name+".txt", "UTF-8");
 		if(chan.equals(channel))

@@ -1,8 +1,5 @@
 package main.java.net.dv8tion;
 
-import java.io.FileNotFoundException;
-import java.io.UnsupportedEncodingException;
-
 import javax.security.auth.login.LoginException;
 
 import net.dv8tion.jda.core.AccountType;
@@ -21,6 +18,9 @@ public class MainBot extends ListenerAdapter
 	boolean logging = false; 
 	PointCounter points = new PointCounter();
 	RPLogger log = new RPLogger();
+	IgnoreList ignored = new IgnoreList();
+	AuthList authed = new AuthList(); 
+	Command command = new Command(); 
 	
 	
 	public static void main (String [] args) 
@@ -34,197 +34,262 @@ public class MainBot extends ListenerAdapter
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event)
 	{
-		String line = event.getMessage().getContent();
-		String [] command;
-		
-		if(line.equalsIgnoreCase(("sudo make me a sandwich")))
-		{
-			event.getChannel().sendMessage("Make your own damn sandwich!").queue();
-		}
-		
-		if(logging)
-		{
-			if((line.charAt(0) == '_' && line.charAt(line.length()-1) == '_') ||(line.charAt(0) == '*' && line.charAt(line.length()-1) == '*'))
-			{
-				line = line.substring(1,line.length()-1);
-			}
-			log.addLine(event.getAuthor().getName() + " " + line,event.getChannel().getName());
-		}
-		
-		points.addPoints(event.getAuthor().getId(), 1);
-		
-		
-		//checks for ! 
-		if(line.length() < 1)
-		{
-			return;
-		}
-		if(!(line.charAt(0) == Ref.trigger) || mute)
-		{
-			if(mute)
-			{
-				if(event.getAuthor().getName().equals("RinTheSnowMew") && line.equalsIgnoreCase("!unmute"))
-				{
-					mute = false;
-				}
-			}
-			return;
-		}
-		
-		
-		//documents commands
-		System.out.println(event.getAuthor().getName() +"'s touching me in " +event.getChannel().getName() +": " + line);
-		command = line.split(" ");
-		
 		//Ignores herself
 		if(event.getAuthor().getName().equals("KittyBot"))
 			return;
 		
-		
-		//POST COUNTER STUFF 
-		if(command[0].equalsIgnoreCase("!points"))
+		String message = command.comSent(event.getMessage(), event.getMember());
+		if(!message.equals(""))
 		{
-			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " you have " + Integer.toString(points.getPoints(event.getAuthor().getId())) + " beans!").queue();
+			event.getChannel().sendMessage(message).queue();
 		}
 		
-		if(command[0].equalsIgnoreCase("!writetofile"))
-		{
-			if(event.getAuthor().getName().equals("RinTheSnowMew"))
-			{
-				try {
-					points.writeToFile();
-					event.getChannel().sendMessage("Saved successfully").queue();
-				} catch (FileNotFoundException e) 
-				{
-					e.printStackTrace();
-				} catch (UnsupportedEncodingException e) 
-				{
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		//RP Log
-		if(command[0].equalsIgnoreCase("!rpStart"))
-		{
-			logging = true; 
-			log.switchChan(event.getChannel().getName());
-			event.getChannel().sendMessage("Logging Started").queue();
-			
-		}
-		
-		if(command[0].equalsIgnoreCase("!rpend") && logging)
-		{
-			logging = false;
-			try 
-			{
-				if(event.getMessage().getContent().length() <= 7)
-				{
-					event.getChannel().sendFile(log.writeFile("RPLOG", event.getChannel().getName()),"RpLog.txt", null).queue();
-				}
-				else
-				{
-					event.getChannel().sendFile(log.writeFile(event.getMessage().getContent().substring(7), event.getChannel().getName()), 
-							event.getMessage().getContent().substring(7) + ".txt", null).queue();
-				}
-				
-				event.getChannel().sendMessage("Test successful").queue();
-			} catch (FileNotFoundException e) 
-			{
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) 
-			{
-				e.printStackTrace();
-			}
-
-		}
-		
-		
-		//RANDOM CALL & RESPONSE
-		if(command[0].equalsIgnoreCase("!ping"))
-		{
-			event.getChannel().sendMessage("Boop!").queue();
-			return;
-		}
-		
-		if(command[0].equalsIgnoreCase("!boop"))
-		{
-			if(command.length == 1)
-			{
-				event.getChannel().sendMessage("*Boops " + event.getAuthor().getAsMention() +"*").queue();
-			}
-			else
-			{
-				event.getChannel().sendMessage("*Boops " + command[1] + "*").queue();
-			}
-			return;
-		}
-		
-		
-		//Method call and response 
-		if(command[0].equalsIgnoreCase("!roll"))
-		{
-			event.getChannel().sendMessage(rollDice(command)).queue();
-		}
-		
-		if(command[0].equalsIgnoreCase("!choose"))
-		{
-			event.getChannel().sendMessage(choose(line)).queue();
-		}
-		
-		if(command[0].equalsIgnoreCase("!mute"))
-		{
-			if(event.getAuthor().getName().equals("RinTheSnowMew"))
-			{
-				mute = true;
-				return;
-			}
-			event.getChannel().sendMessage("You can't tell me what to do!").queue();
-			return;
-		}
-		
-		if(command[0].equalsIgnoreCase("!listMembers"))
-		{
-			if(event.getAuthor().getName().equals("RinTheSnowMew"))
-			{
-//				String line2 = event.getAuthor().getId();
-//				event.getChannel().sendMessage("<@"+line2+">").queue();
-				String members = "";
-				for(int i = 0; i < event.getChannel().getMembers().size(); i ++)
-				{
-					members += event.getChannel().getMembers().get(i).getUser().getId() + ", " + event.getChannel().getMembers().get(i).getUser().getName() + ";";
-					if (members.length() > 1900)
-					{
-						event.getChannel().sendMessage(members).queue();
-						members = "";
-					}	
-				}
-				event.getChannel().sendMessage(members).queue();
-				return;
-			}
-			event.getChannel().sendMessage("You can't tell me what to do!").queue();
-			return;
-		}
-		
-		if(command[0].equalsIgnoreCase("!listRoles"))
-		{
-			String roles = "";
-			for(int i = 0; i < event.getChannel().getMembers().size(); i ++)
-			{
-				roles += event.getGuild().getRoles().get(i).getIdLong() + "\n";
-				if (roles.length() > 1900)
-				{
-					event.getChannel().sendMessage(roles).queue();
-					roles = "";
-				}	
-			}
-			event.getChannel().sendMessage(roles).queue();
-			return;
-		}
-
-		
-	}
+//		String line = event.getMessage().getContent();
+//		String [] command;
+//		String [] words;
+//		if(line.equalsIgnoreCase(("sudo make me a sandwich")))
+//		{
+//			event.getChannel().sendMessage("Make your own damn sandwich!").queue();
+//		}
+//		
+//		
+//		if(logging)
+//		{
+//			if((line.charAt(0) == '_' && line.charAt(line.length()-1) == '_') ||(line.charAt(0) == '*' && line.charAt(line.length()-1) == '*'))
+//			{
+//				line = line.substring(1,line.length()-1);
+//			}
+//			log.addLine(event.getAuthor().getName() + " " + line,event.getChannel().getName());
+//		}
+//		if(event.getGuild().getName().equals("Meeples Peeples"))
+//		{
+//			points.addPoints(event.getAuthor().getId(),event.getGuild().getId(), 1);
+//		}
+//		
+//		
+//		
+//		//checks for ! 
+//		if(line.length() < 1)
+//		{
+//			return;
+//		}
+//		if(!(line.charAt(0) == Ref.trigger) || mute)
+//		{
+//			if(mute)
+//			{
+//				if(event.getAuthor().getName().equals("RinTheSnowMew") && line.equalsIgnoreCase("!unmute"))
+//				{
+//					mute = false;
+//				}
+//			}
+//			return;
+//		}
+//		
+//		
+//		
+//		//documents commands
+//		System.out.println(event.getAuthor().getName() +"'s touching me in " +event.getChannel().getName() +": " + line);
+//		command = line.split(" ");
+//		
+//		//Ignores herself
+//		if(event.getAuthor().getName().equals("KittyBot"))
+//			return;
+//		
+//		//Help
+//		if(command[0].equalsIgnoreCase("!help"))
+//		{
+//			event.getChannel().sendMessage("Hi! My name is KittyBot! I can do lots of things! "
+//					+ "\nIf you !boop I'll boop you right back!"
+//					+ "\nIf you !roll I'll need a dice like this 1d4 or 10d7"
+//					+ "\nTo see your current amount of beans just !points"
+//					+ "\nAnd if you wanna bet 100 beans for a chance for more you can always !bet"
+//					+ "\nIf you give me some stuff to !choose from just remember to put commas in between"
+//					+ "\nAnd if you want me to keep track of your RP you can !rpstart just don't forget to !rpend").queue();
+//		}
+//		
+//		//POST COUNTER STUFF 
+//		if(command[0].equalsIgnoreCase("!points"))
+//		{
+//			event.getChannel().sendMessage(event.getAuthor().getAsMention() + " you have " 
+//						+ Integer.toString(points.getPoints(event.getAuthor().getId(),event.getGuild().getId())) + " beans!").queue();
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!writetofile"))
+//		{
+//			if(event.getAuthor().getName().equals("RinTheSnowMew"))
+//			{
+//				try {
+//					points.writeToFile();
+//					event.getChannel().sendMessage("Beans saved successfully").queue();
+//					ignored.writeToFile();
+//					event.getChannel().sendMessage("Ignore list saved successfully").queue();
+//					
+//				} catch (FileNotFoundException e) 
+//				{
+//					e.printStackTrace();
+//				} catch (UnsupportedEncodingException e) 
+//				{
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!bet"))
+//		{
+//			event.getChannel().sendMessage(points.betStart(event.getAuthor().getId(),event.getGuild().getId())).queue();
+//		}
+//		
+//		
+//		//RP Log
+//		if(command[0].equalsIgnoreCase("!rpStart"))
+//		{
+//			if(logging)
+//			{
+//				event.getChannel().sendMessage("Logging already started in other channel. Please wait for current RP to finish.").queue();
+//			}
+//			else
+//			{
+//				logging = true; 
+//				log.switchChan(event.getChannel().getName());
+//				event.getChannel().sendMessage("Logging Started").queue();
+//			}
+//			
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!rpend") && logging)
+//		{
+//			logging = false;
+//			try 
+//			{
+//				if(event.getMessage().getContent().length() <= 7)
+//				{
+//					event.getChannel().sendFile(log.writeFile("RPLOG", event.getChannel().getName()),"RpLog.txt", null).queue();
+//				}
+//				else
+//				{
+//					event.getChannel().sendFile(log.writeFile(event.getMessage().getContent().substring(7), event.getChannel().getName()), 
+//							event.getMessage().getContent().substring(7) + ".txt", null).queue();
+//				}
+//				
+//				event.getChannel().sendMessage("Here's your file!").queue();
+//			} catch (FileNotFoundException e) 
+//			{
+//				e.printStackTrace();
+//			} catch (UnsupportedEncodingException e) 
+//			{
+//				e.printStackTrace();
+//			}
+//
+//		}
+//		
+//		
+//		//RANDOM CALL & RESPONSE
+//		if(command[0].equalsIgnoreCase("!ping"))
+//		{
+//			event.getChannel().sendMessage("Boop!").queue();
+//			return;
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!boop"))
+//		{
+//			if(command.length == 1)
+//			{
+//				event.getChannel().sendMessage("*Boops " + event.getAuthor().getAsMention() +"*").queue();
+//			}
+//			else
+//			{
+//				event.getChannel().sendMessage("*Boops " + command[1] + "*").queue();
+//			}
+//			return;
+//		}
+//		
+//		
+//
+//		
+//		//Method call and response 
+//		
+//		if(command[0].equalsIgnoreCase("!roll"))
+//		{
+//			event.getChannel().sendMessage(rollDice(command)).queue();
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!choose"))
+//		{
+//			event.getChannel().sendMessage(choose(line)).queue();
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!mute"))
+//		{
+//			if(event.getAuthor().getName().equals("RinTheSnowMew"))
+//			{
+//				mute = true;
+//				return;
+//			}
+//			event.getChannel().sendMessage("You can't tell me what to do!").queue();
+//			return;
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!listMembers"))
+//		{
+//			if(event.getAuthor().getName().equals("RinTheSnowMew"))
+//			{
+////				String line2 = event.getAuthor().getId();
+////				event.getChannel().sendMessage("<@"+line2+">").queue();
+//				String members = "";
+//				for(int i = 0; i < event.getChannel().getMembers().size(); i ++)
+//				{
+//					members += event.getChannel().getMembers().get(i).getUser().getId() + ", " + event.getChannel().getMembers().get(i).getUser().getName() + ";";
+//					if (members.length() > 1900)
+//					{
+//						event.getChannel().sendMessage(members).queue();
+//						members = "";
+//					}	
+//				}
+//				event.getChannel().sendMessage(members).queue();
+//				return;
+//			}
+//			event.getChannel().sendMessage("You can't tell me what to do!").queue();
+//			return;
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!myRoles"))
+//		{
+//			event.getChannel().sendMessage(event.getMember().getRoles().toString()).queue();
+//			return;
+//		}
+//		
+//		
+//		
+//		
+//		//Moderation commands 
+//		if(command[0].equalsIgnoreCase("!subtract"))
+//		{
+//			words = event.getMessage().getContent().split(" ");
+//			points.subPoints(event.getMessage().getMentionedUsers().get(0).getId(),event.getGuild().getId(), Integer.parseInt(words[2]));
+//		}
+//			//Ignore List
+//		if(command[0].equalsIgnoreCase("!ignore"))
+//		{
+//			ignored.addName(event.getMessage().getMentionedUsers().get(0).getId(),event.getGuild().getId()); 
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!ignorerole"))
+//		{
+//			ignored.addRole(event.getMessage().getMentionedRoles().get(0).getId(),event.getGuild().getId());
+//		}
+//				
+//		if(command[0].equalsIgnoreCase("!unignore"))
+//		{
+//			ignored.removeName(event.getMessage().getMentionedUsers().get(0).getId(),event.getGuild().getId());
+//		}
+//		
+//		if(command[0].equalsIgnoreCase("!unignorerole"))
+//		{
+//			ignored.removeRole(event.getMessage().getMentionedRoles().get(0).getId(),event.getGuild().getId());
+//		}
 	
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see net.dv8tion.jda.core.hooks.ListenerAdapter#onPrivateMessageReceived(net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent)
@@ -242,78 +307,4 @@ public class MainBot extends ListenerAdapter
 		System.out.println(event.getAuthor().getName()+"'s touching me");		
 	}
 	
-	/*
-	 * Chooses a random answer out of a given list
-	 */
-	public String choose(String line)
-	{
-		line = line.substring(7);
-		String [] choices = line.split(",");
-		if(choices.length == 1)
-		{
-			return "I can't choose from *one* thing!";
-		}
-		
-		return choices[(int) (Math.random()*choices.length)];
-	}
-	
-	/*
-	 * Takes the command for !roll and returns the string containing the rolls and the total
-	 */
-	public String rollDice(String [] command)
-	{
-		int numofdice = 0;
-		int dicesize = 0;
-		String dicenum [] = command[1].split("d");
-		if(!(isInteger(dicenum[0]) && isInteger(dicenum[1])))
-		{
-			
-			return "Enter actual numbers please.";
-		}
-		numofdice = Integer.parseInt(dicenum[0]);
-		dicesize = Integer.parseInt(dicenum[1]);
-		int total = 0;
-		int roll = 0;
-		String nums = "";
-		//checks for lower than 1 dice or dice size 
-		if(numofdice < 1 || dicesize < 1 || numofdice > 100 || dicesize > 100)
-		{
-			return "*drowns in dice*";
-		}
-		for(int i = 0; numofdice > i; i ++)
-		{
-			roll = (int) (Math.random()*dicesize) + 1;
-			nums += roll + " ";
-			total += roll;
-		}
-		return "Rolls are: " + nums + "\n" + "Total is: " + total;
-	}
-	
-	/*
-	 * checks if String is Int if not returns false 
-	 */
-	public static boolean isInteger(String str) 
-	{
-	    if (str == null) {
-	        return false;
-	    }
-	    int length = str.length();
-	    if (length == 0) {
-	        return false;
-	    }
-	    int i = 0;
-	    if (str.charAt(0) == '-') {
-	        if (length == 1) {
-	            return false;
-	        }
-	        i = 1;
-	    }
-	    for (; i < length; i++) {
-	        char c = str.charAt(i);
-	        if (c < '0' || c > '9') {
-	            return false;
-	        }
-	    }
-	    return true;
-	}
 }
