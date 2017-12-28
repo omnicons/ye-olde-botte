@@ -1,11 +1,13 @@
 package main.java.net.dv8tion;
 
+import java.util.ArrayList;
+
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 
 public class Command 
 {
-	boolean mute = false; 
+	ArrayList <String> mute = new ArrayList <String>(); 
 	boolean logging = false; 
 	PointCounter points = new PointCounter();
 	RPLogger log = new RPLogger();
@@ -40,12 +42,15 @@ public class Command
 			//Mutes and unmutes bot
 			if(command[0].equals("!mute"))
 			{
-				mute = true;
+				mute.add(message.getGuild().getId());
 				return "Being quiet now.";
 			}
 			if(command[0].equals("!unmute"))
 			{
-				mute = false;
+				if(mute.contains(message.getGuild().getId()))
+				{
+					mute.remove(message.getGuild().getId());
+				}
 				return "I can talk again!";
 			}
 			
