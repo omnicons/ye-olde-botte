@@ -46,13 +46,16 @@ public class IgnoreList
 		}
 	}
 	
-	public void addName(String role, String server)
+	public void addName(String name, String server)
 	{
-		names.put(role,server);
+		names.put(name,server);
 	}
-	public void removeName(String role, String server)
+	public void removeName(String name, String server)
 	{
-		names.remove(role, server);
+		if(names.containsKey(name))
+		{
+			names.remove(name, server);
+		}	
 	}
 	
 	public void addRole(String role, String server)
@@ -61,14 +64,17 @@ public class IgnoreList
 	}
 	public void removeRole(String role, String server)
 	{
-		roles.remove(role, server);
+		if(roles.containsKey(role))
+		{
+			roles.remove(role, server);
+		}
 	}
 	
 	public boolean checkName(String name, String server)
 	{
 		for(int i = 0; i < names.size(); i++)
 		{
-			if(name.equals(names.get(i))&& server.equals(names.get(name)))
+			if(names.containsKey(name) && server.equals(names.get(name)))
 			{
 				return true; 
 			}
@@ -77,9 +83,11 @@ public class IgnoreList
 	}
 	
 	public boolean checkRole(List <Role> rolesIn, String server)
-	{
+	{ 
+		System.out.println("ROLES IGNORED SIZE IS " + roles.size());
 		for(int i = 0; i < roles.size(); i++)
 		{
+			
 			for(int j = 0; j <rolesIn.size(); j ++)
 			{
 				if(roles.containsKey(rolesIn.get(j).getId()) && server.equals(roles.get(rolesIn.get(j).getId())))

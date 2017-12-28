@@ -29,13 +29,6 @@ public class AuthList
 		    	names.put(words[0],words[1]);
 		    }
 		    br.close();
-		    br = new BufferedReader(new InputStreamReader(new FileInputStream("AuthRoles.txt")));
-		    while ((line = br.readLine()) != null) 
-		    {
-		    	words = line.split(" ");
-		    	roles.put(words[0],words[1]);
-		    }
-		    br.close();
 		} catch (FileNotFoundException e) 
 		{
 			System.out.println("Authorized names file not found");
@@ -69,7 +62,7 @@ public class AuthList
 	{
 		for(int i = 0; i < names.size(); i++)
 		{
-			if(name.equals(names.get(i))&& server.equals(names.get(name)))
+			if(names.containsKey(name) && server.equals(names.get(name)))
 			{
 				return true; 
 			}
@@ -98,13 +91,6 @@ public class AuthList
 		for(int i = 0; i < names.size(); i ++)
 		{
 			writer.println(names.get(i));
-		}
-		writer.close();
-		
-		writer = new PrintWriter("AuthRoles.txt", "UTF-8");
-		for(int i = 0; i < roles.size(); i ++)
-		{
-			writer.println(roles.get(i));
 		}
 		writer.close();
 	}

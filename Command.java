@@ -19,6 +19,7 @@ public class Command
 	
 	public String comSent(Message message, Member member)
 	{
+		
 		String [] command = message.getContent().split(" ");
 		
 		if(!command[0].startsWith("!"))
@@ -26,14 +27,34 @@ public class Command
 			return "";
 		}
 		
-		//Start of Mod commands
-		if(isAuth(member,message.getGuild().getId()))
+		//Start of Dev command
+		if(command[0].equals("!write") && message.getAuthor().getName().equals("RinTheSnowMew"))
 		{
+			
+		}
+		
+		//Start of Mod commands
+		if(isAuth(member,message.getGuild().getId()) 
+				|| message.getAuthor().getName().equals("RinTheSnowMew"))
+		{
+			//Mutes and unmutes bot
+			if(command[0].equals("!mute"))
+			{
+				mute = true;
+				return "Being quiet now.";
+			}
+			if(command[0].equals("!unmute"))
+			{
+				mute = false;
+				return "I can talk again!";
+			}
+			
 			//Adds points to user
 			if(command[0].equalsIgnoreCase("!addpoints"))
 			{
 				points.addPoints(message.getMentionedUsers().get(0).getId(),
 						message.getGuild().getId(), Integer.parseInt(command[2]));
+				
 			}
 			
 			//Removes points from user
@@ -41,14 +62,39 @@ public class Command
 			{
 				points.subPoints(message.getMentionedUsers().get(0).getId(),
 						message.getGuild().getId(), Integer.parseInt(command[2]));
+				
 			}
 			
+			//Ignore & un-ignore separate users
+			if(command[0].equalsIgnoreCase("!ignore"))
+			{
+				ignored.addName(message.getMentionedUsers().get(0).getId(), message.getGuild().getId()); 
+				return "Ignored " + message.getMentionedUsers().get(0).getName();
+			}
+			if(command[0].equalsIgnoreCase("!unignore"))
+			{
+				ignored.addName(message.getMentionedUsers().get(0).getId(), message.getGuild().getId()); 
+				return "Unignored " + message.getMentionedUsers().get(0).getName();
+			}
 			
+			//Ignore & un-ignore separate roles
+			if(command[0].equalsIgnoreCase("!ignorerole"))
+			{
+				ignored.addRole(message.getMentionedRoles().get(0).getId(), message.getGuild().getId()); 
+				return "Ignored " + message.getMentionedRoles().get(0).getName();
+			}
+			if(command[0].equalsIgnoreCase("!unignorerole"))
+			{
+				ignored.addRole(message.getMentionedRoles().get(0).getId(), message.getGuild().getId()); 
+				return "Unignored " + message.getMentionedRoles().get(0).getName();
+			}
 		}
 		
 		//Start of non-mod commands
+		System.out.println("Checking person");
 		if(mute || isIgnore(member, message.getGuild().getId()))
 		{
+			System.out.println("stuff");
 			return "";
 		}
 		
@@ -75,7 +121,8 @@ public class Command
 	
 	private boolean isAuth(Member person, String server)
 	{
-		if(authed.checkName(person.getUser().getId(),server) || authed.checkRole(person.getRoles(),server))
+		if(authed.checkName(person.getUser().getId(),server) 
+				|| authed.checkRole(person.getRoles(),server))
 		{
 			return true; 
 		}
@@ -84,7 +131,8 @@ public class Command
 	
 	private boolean isIgnore(Member person, String server)
 	{
-		if(ignored.checkName(person.getUser().getId(),server) || ignored.checkRole(person.getRoles(),server))
+		if(ignored.checkName(person.getUser().getId(),server) 
+				|| ignored.checkRole(person.getRoles(),server))
 		{
 			return true; 
 		}

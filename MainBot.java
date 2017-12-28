@@ -18,8 +18,8 @@ public class MainBot extends ListenerAdapter
 	boolean logging = false; 
 	PointCounter points = new PointCounter();
 	RPLogger log = new RPLogger();
-	IgnoreList ignored = new IgnoreList();
-	AuthList authed = new AuthList(); 
+//	IgnoreList ignored = new IgnoreList();
+//	AuthList authed = new AuthList(); 
 	Command command = new Command(); 
 	
 	
