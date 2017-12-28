@@ -22,7 +22,7 @@ public class Command
 	public String comSent(Message message, Member member)
 	{
 		
-		String [] command = message.getContent().split(" ");
+		String [] command = message.getContentRaw().split(" ");
 		
 		if(!command[0].startsWith("!"))
 		{
@@ -96,8 +96,7 @@ public class Command
 		}
 		
 		//Start of non-mod commands
-		System.out.println("Checking person");
-		if(mute || isIgnore(member, message.getGuild().getId()))
+		if(mute.contains(message.getGuild()) || isIgnore(member, message.getGuild().getId()))
 		{
 			System.out.println("stuff");
 			return "";
@@ -117,7 +116,7 @@ public class Command
 		
 		if(command[0].equalsIgnoreCase("!choose"))
 		{
-			return choose(message.getContent());
+			return choose(message.getContentRaw());
 		}
 		return ""; 
 	}
