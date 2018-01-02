@@ -1,5 +1,7 @@
 package main.java.net.dv8tion;
 
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import net.dv8tion.jda.core.entities.Member;
@@ -7,10 +9,10 @@ import net.dv8tion.jda.core.entities.Message;
 
 public class Command 
 {
+	RPManager manager = new RPManager();
 	ArrayList <String> mute = new ArrayList <String>(); 
 	boolean logging = false; 
 	PointCounter points = new PointCounter();
-	RPLogger log = new RPLogger();
 	IgnoreList ignored = new IgnoreList();
 	AuthList authed = new AuthList();
 	
@@ -21,6 +23,17 @@ public class Command
 	
 	public String comSent(Message message, Member member)
 	{
+		String line = message.getContentRaw();
+		if(!isIgnore(member, message.getGuild().getId()))
+		{
+			points.addPoints(message.getAuthor().getId(), message.getGuild().getId(), 1);
+		}
+		if((line.charAt(0) == '_' && line.charAt(line.length()-1) == '_') 
+				||(line.charAt(0) == '*' && line.charAt(line.length()-1) == '*'))
+		{
+			line = line.substring(1,line.length()-1);
+		}
+		manager.addLine(message.getChannel().getId(), message.getAuthor().getName() + " " + line);
 		
 		String [] command = message.getContentRaw().split(" ");
 		
@@ -30,9 +43,20 @@ public class Command
 		}
 		
 		//Start of Dev command
-		if(command[0].equals("!write") && message.getAuthor().getName().equals("RinTheSnowMew"))
+		if(command[0].equals("!save") && message.getAuthor().getName().equals("RinTheSnowMew"))
 		{
-			
+			try {
+				points.writeToFile();
+				ignored.writeToFile();
+				return "Saved successfully!";
+				
+			} catch (FileNotFoundException e) 
+			{
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 		
 		//Start of Mod commands
@@ -96,12 +120,26 @@ public class Command
 		}
 		
 		//Start of non-mod commands
-		if(mute.contains(message.getGuild()) || isIgnore(member, message.getGuild().getId()))
+		if(mute.contains(message.getGuild().getId()) || isIgnore(member, message.getGuild().getId()))
 		{
-			System.out.println("stuff");
 			return "";
 		}
+		//Help
+		if(command[0].equalsIgnoreCase("!help"))
+		{
+			return ("Hi! My name is KittyBot! I can do lots of things! "
+					+ "\nIf you !boop I'll boop you right back!"
+					+ "\nIf you !roll I'll need a dice like this 1d4 or 10d7"
+					+ "\nTo see your current amount of beans just !points"
+					+ "\nAnd if you wanna bet 100 beans for a chance for more you can always !bet"
+					+ "\nIf you give me some stuff to !choose from just remember to put commas in between"
+					+ "\nAnd if you want me to keep track of your RP you can !rpstart just don't forget to !rpend");
+		} 
 		
+		if(command[0].equalsIgnoreCase("!info"))
+		{
+			return "Developed by Rin. Repository is https://github.com/omnicons/ye-olde-botte";
+		}
 		if(command[0].equals("!boop"))
 		{
 			return "Success!";
@@ -118,6 +156,37 @@ public class Command
 		{
 			return choose(message.getContentRaw());
 		}
+		
+		if(command[0].equalsIgnoreCase("!points"))
+		{
+			return "You have " + points.getPoints(message.getAuthor().getId(), message.getGuild().getId()) + " beans!";
+		}
+		
+		if(command[0].equalsIgnoreCase("!bet"))
+		{
+			return points.betStart(message.getAuthor().getId(),message.getGuild().getId());
+		}
+		
+		if(command[0].equalsIgnoreCase("!rpstart"))
+		{
+			manager.newRP(message.getChannel().getId());
+			return "RP Started";
+		}
+		
+		if(command[0].equalsIgnoreCase("!rpend"))
+		{
+			if(command.length == 1)
+			{
+				message.getChannel().sendFile(manager.endRP(message.getChannel().getId(), "RP")).queue();
+				return "RP ended, there's your log!";
+			}
+			else
+			{
+				message.getChannel().sendFile(manager.endRP(message.getChannel().getId(), command[1])).queue();
+				return "RP ended, there's your log!";
+			}
+		}
+		
 		return ""; 
 	}
 	

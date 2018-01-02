@@ -84,7 +84,6 @@ public class IgnoreList
 	
 	public boolean checkRole(List <Role> rolesIn, String server)
 	{ 
-		System.out.println("ROLES IGNORED SIZE IS " + roles.size());
 		for(int i = 0; i < roles.size(); i++)
 		{
 			

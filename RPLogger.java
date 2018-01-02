@@ -12,37 +12,24 @@ public class RPLogger
 	String chan;
 	public RPLogger()
 	{
-		chan = "";
+		
 	}
-	
-	public void switchChan(String channel)
+
+	public void addLine(String line)
 	{
-		chan = channel; 
+		logs.add(line);
 	}
 	
-	public void addLine(String line, String channel)
-	{
-		if(chan.equals(channel))
-		{
-			logs.add(line);
-		}
-	}
-	
-	public File writeFile(String name, String channel) 
+	public File writeFile(String name) 
 			throws FileNotFoundException, UnsupportedEncodingException
 	{
 		PrintWriter writer = new PrintWriter(name+".txt", "UTF-8");
-		if(chan.equals(channel))
+		while(!logs.isEmpty())
 		{
-			while(!logs.isEmpty())
-			{
-				 writer.println(logs.get(0));
-				 logs.remove(0);
-			}
-			writer.close();
-			return new File(name + ".txt"); 
+			 writer.println(logs.get(0));
+			 logs.remove(0);
 		}
 		writer.close();
-		return null;
+		return new File(name + ".txt"); 
 	}
 }
